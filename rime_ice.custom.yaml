@@ -1,0 +1,89 @@
+# encoding: utf-8
+# ─────────────────────────────────────────────────────────────
+# 2026-11-06 性能大修 —— 目标：接近微信输入法的跟手度
+# 备份：E:\APPs\小狼毫-backup-20261106-183419（全量配置）
+#       rime_ice.custom.yaml.bak-before-fix（改前单文件）
+#
+# 卡顿的三个真实来源（都已实测确认）：
+#   1. 万象语法模型（wanxiang-lts-zh-hans.gram, 400MB）已于 2026-11-06 移除
+#   2. engine 里 11 个 lua_translator + 7 个 lua_filter，
+#      每敲一个键全部跑一遍（corrector.lua 一个就 20KB）
+#   3. 候选生成太多（13 个 translator 各自生产候选再合并排序）
+# ─────────────────────────────────────────────────────────────
+patch:
+  # ④ 关掉 emoji 候选（不需要就别让它每次转换）
+  #    s2t.json 没装，traditionalization 关掉可避免每次启动的 opencc 报错
+  "switches/@2/reset": 0    # traditionalization -> 简
+  "switches/@3/reset": 0    # emoji -> 关
+  # ① 语法模型：关掉（400MB，卡顿主因）
+  grammar: null          # 模型文件已删，此项保留以防 librime 报错
+  translator/contextual_suggestions: false
+  translator/max_homophones: 3
+
+  # ② 砍掉每个按键都要跑的 lua 模块
+  #    保留：日期、以词定字、英文、自定义短语
+  #    砍掉：unicode、uuid、农历、数字大写、暴力GC、英文自动大写、
+  #          长词优先、降低英文、置顶候选、错音提示
+  #    这些都属于"偶尔用一次，但每次按键都收费"
+  engine/translators:
+    - lua_translator@*llm_translator
+    - punct_translator
+    - script_translator
+    - lua_translator@*date_translator
+    - table_translator@custom_phrase
+    - table_translator@melt_eng
+  engine/filters:
+    - simplifier
+    - uniquifier
+
+  # ③ 候选数量：微信一页 6 个
+  menu/page_size: 6
+
+  # ④ 界面：横排 + 编码内嵌 + 紧凑尺寸（2026-11-06 20:58 收紧，之前横排撑满整屏太丑）
+  style/horizontal: true
+  style/inline_preedit: true
+  style/font_point: 12
+  style/label_font_point: 12
+  style/comment_font_point: 9
+  style/label_format: "%s."
+  style/layout/candidate_spacing: 10
+  style/layout/spacing: 8
+  style/layout/margin_x: 6
+  style/layout/margin_y: 6
+  style/layout/hilite_padding: 6
+  style/layout/hilite_spacing: 4
+  style/layout/border_width: 1
+  style/layout/round_corner: 6
+  style/layout/align_type: left
+
+  # ④b 关掉候选后面的拼音注音：
+  #     微信不显示，而且它把横排候选撑到 2560px 满屏，是「太丑」的主因
+  translator/spelling_hints: 0
+  translator/always_show_comments: false
+
+  # ⑤ 性能：关掉会拖慢的选项
+  translator/enable_completion: true   # 逐字提示保留（很有用且便宜）
+  translator/enable_sentence: false    # 整句转换很贵，长句时尤其明显
+  speller/max_code_length: 6           # 限制最大编码长度，避免超长串
+
+  # ⑥ 模糊音（rime-ice 默认全关，微信默认开）
+  #    平翘舌 / 前后鼻音 / n-l / f-h / r-l，外加 rime-ice 自带的 30+ 条错序容错
+  speller/algebra/+:
+    - derive/^([zcs])h/$1/          # zh/ch/sh → z/c/s
+    - derive/^([zcs])([^h])/$1h$2/  # z/c/s → zh/ch/sh
+    - derive/([aeiou])ng$/$1n/      # ang/eng/ing/ong → an/en/in/on
+    - derive/([aeiou])n$/$1ng/      # 反向
+    - derive/^l/n/                  # l/n 混淆（南方口音）
+    - derive/^n/l/
+    - derive/^f/h/                  # f/h 混淆
+    - derive/^h/f/
+    - derive/^r/l/                  # r/l 混淆（「人」打 len 也出）
+    - derive/^l/r/                  # 反向（「老」打 rao 也出）
+
+  # ⑦ 智能纠错：打错了也能出（微信有这个）
+  #    rime-ice 自带的 corrector 我砍掉了（20KB，每次按键跑），
+  #    这里用便宜的 speller 侧派生替代
+
+  # ⑧ 中英混输：微信能直接打英文，rime-ice 靠 melt_eng
+  translator/melt_eng/enable_completion: true
+  translator/melt_eng/enable_sentence: false

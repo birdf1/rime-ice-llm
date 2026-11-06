@@ -1,0 +1,35 @@
+# 小狼毫 / Rime 运行时产物
+build/
+*.userdb/
+user.yaml
+installation.yaml
+sync/
+*.bin
+*.gram
+
+# AI 联想的运行时数据
+llm_cache.txt
+llm_req.txt
+llm_daemon.log
+llm_debug.log
+llm_loaded.marker
+wordlist.bin
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini
+
+# 备份文件
+*.bak
+*.bak-*
+*.orig

@@ -1,0 +1,531 @@
+# Rime dictionary
+# encoding: utf-8
+#
+# 专业词库：机电一体化 / 电气自动化 / 工业机器人 / PLC / 单片机
+# 生成：dictgen/build_dicts.py（520 条）
+# 说明：核心专业词用高权重重写，保证打「bianpinqi」时「变频器」排在前面
+---
+name: mech
+version: "2026-11-06"
+sort: by_weight
+...
+配合	pei he	500461
+传感器	chuan gan qi	307125
+不锈钢	bu xiu gang	291240
+保养	bao yang	283280
+轴承	zhou cheng	208670
+焊接	han jie	172570
+关节	guan jie	157895
+铝合金	lv he jin	136620
+单片机	dan pian ji	126145
+变频器	bian pin qi	98595
+润滑	run hua	98065
+基准	ji zhun	97020
+弹簧	tan huang	94775
+齿轮	chi lun	93365
+知识点	zhi shi dian	91440
+SolidWorks	solidworks	80000
+Codesys	codesys	80000
+TwinCAT	twincat	80000
+PLC	plc	80000
+HMI	hmi	80000
+PID	pid	80000
+VFD	vfd	80000
+MCU	mcu	80000
+GPIO	gpio	80000
+PWM	pwm	80000
+ADC	adc	80000
+DAC	dac	80000
+UART	uart	80000
+SPI	spi	80000
+I2C	i2c	80000
+CAN	can	80000
+RS232	rs232	80000
+RS485	rs485	80000
+Modbus	modbus	80000
+Profibus	profibus	80000
+Profinet	profinet	80000
+EtherCAT	ethercat	80000
+CANopen	canopen	80000
+DeviceNet	devicenet	80000
+CC-Link	cclink	80000
+SCARA	scara	80000
+AGV	agv	80000
+AMR	amr	80000
+CNC	cnc	80000
+DCS	dcs	80000
+SCADA	scada	80000
+MES	mes	80000
+ERP	erp	80000
+BOM	bom	80000
+SPC	spc	80000
+FMEA	fmea	80000
+OEE	oee	80000
+TPM	tpm	80000
+SOP	sop	80000
+ESD	esd	80000
+EMC	emc	80000
+EFT	eft	80000
+IP54	ip54	80000
+IP65	ip65	80000
+IP67	ip67	80000
+STM32	stm32	80000
+ARM	arm	80000
+DSP	dsp	80000
+FPGA	fpga	80000
+CPLD	cpld	80000
+RTOS	rtos	80000
+RTU	rtu	80000
+TCP	tcp	80000
+UDP	udp	80000
+HTTP	http	80000
+MQTT	mqtt	80000
+OPC	opc	80000
+OPCUA	opcua	80000
+AC	ac	80000
+DC	dc	80000
+RMS	rms	80000
+THD	thd	80000
+UPS	ups	80000
+ATS	ats	80000
+MCC	mcc	80000
+PCC	pcc	80000
+CAD	cad	80000
+CAE	cae	80000
+CAM	cam	80000
+CAPP	capp	80000
+PDM	pdm	80000
+PLM	plm	80000
+MRP	mrp	80000
+LVD	lvd	80000
+HVD	hvd	80000
+MCB	mcb	80000
+MCCB	mccb	80000
+RCD	rcd	80000
+RCBO	rcbo	80000
+SPD	spd	80000
+Modbus RTU	modbusrtu	80000
+Modbus TCP	modbustcp	80000
+GX Works	gxworks	80000
+EtherNet/IP	ethernetip	80000
+OPC UA	opcua	80000
+Altium Designer	altiumdesigner	80000
+UG NX	ugnx	80000
+Visual Studio	visualstudio	80000
+Keil MDK	keilmdk	80000
+触摸屏	chu mo ping	72510
+继电器	ji dian qi	68585
+真题	zhen ti	63740
+伺服电机	si fu dian ji	60000
+伺服驱动器	si fu qu dong qi	60000
+步进电机	bu jin dian ji	60000
+伺服系统	si fu xi tong	60000
+可编程控制器	ke bian cheng kong zhi qi	60000
+工业机器人	gong ye ji qi ren	60000
+三相异步电动机	san xiang yi bu dian dong ji	60000
+单相异步电动机	dan xiang yi bu dian dong ji	60000
+直流电机	zhi liu dian ji	60000
+永磁同步电机	yong ci tong bu dian ji	60000
+无刷电机	wu shua dian ji	60000
+减速电机	jian su dian ji	60000
+力矩电机	li ju dian ji	60000
+定子绕组	ding zi rao zu	60000
+转子	zhuan zi	60000
+绝缘电阻	jue yuan dian zu	60000
+电机铭牌	dian ji ming pai	60000
+额定功率	e ding gong lv	60000
+额定转速	e ding zhuan su	60000
+堵转电流	du zhuan dian liu	60000
+启动电流	qi dong dian liu	60000
+接触器	jie chu qi	60000
+断路器	duan lu qi	60000
+熔断器	rong duan qi	60000
+热继电器	re ji dian qi	60000
+时间继电器	shi jian ji dian qi	60000
+中间继电器	zhong jian ji dian qi	60000
+固态继电器	gu tai ji dian qi	60000
+交流接触器	jiao liu jie chu qi	60000
+空气开关	kong qi kai guan	60000
+漏电保护器	lou dian bao hu qi	60000
+浪涌保护器	lang yong bao hu qi	60000
+按钮开关	an niu kai guan	60000
+转换开关	zhuan huan kai guan	60000
+万能转换开关	wan neng zhuan huan kai guan	60000
+微动开关	wei dong kai guan	60000
+编码器	bian ma qi	60000
+变送器	bian song qi	60000
+热电偶	re dian ou	60000
+热电阻	re dian zu	60000
+压力传感器	ya li chuan gan qi	60000
+流量计	liu liang ji	60000
+液位计	ye wei ji	60000
+位移传感器	wei yi chuan gan qi	60000
+光栅尺	guang shan chi	60000
+霍尔传感器	huo er chuan gan qi	60000
+称重传感器	cheng zhong chuan gan qi	60000
+接近开关	jie jin kai guan	60000
+光电开关	guang dian kai guan	60000
+行程开关	xing cheng kai guan	60000
+限位开关	xian wei kai guan	60000
+磁性开关	ci xing kai guan	60000
+液压缸	ye ya gang	60000
+气缸	qi gang	60000
+液压泵	ye ya beng	60000
+液压马达	ye ya ma da	60000
+电磁阀	dian ci fa	60000
+换向阀	huan xiang fa	60000
+溢流阀	yi liu fa	60000
+节流阀	jie liu fa	60000
+单向阀	dan xiang fa	60000
+比例阀	bi li fa	60000
+伺服阀	si fu fa	60000
+蓄能器	xu neng qi	60000
+气源处理三联件	qi yuan chu li san lian jian	60000
+油雾器	you wu qi	60000
+减压阀	jian ya fa	60000
+调速阀	tiao su fa	60000
+液压站	ye ya zhan	60000
+液压油	ye ya you	60000
+气动回路	qi dong hui lu	60000
+齿条	chi tiao	60000
+蜗轮蜗杆	wo lun wo gan	60000
+行星齿轮	xing xing chi lun	60000
+带传动	dai chuan dong	60000
+链传动	lian chuan dong	60000
+联轴器	lian zhou qi	60000
+离合器	li he qi	60000
+制动器	zhi dong qi	60000
+凸轮	tu lun	60000
+曲柄滑块	qu bing hua kuai	60000
+滚珠丝杠	gun zhu si gang	60000
+同步带	tong bu dai	60000
+三角带	san jiao dai	60000
+平键	ping jian	60000
+花键	hua jian	60000
+销轴	xiao zhou	60000
+螺纹连接	luo wen lian jie	60000
+机架	ji jia	60000
+箱体	xiang ti	60000
+轴承座	zhou cheng zuo	60000
+导轨	dao gui	60000
+滑块	hua kuai	60000
+密封圈	mi feng quan	60000
+油封	you feng	60000
+润滑脂	run hua zhi	60000
+铸铁	zhu tie	60000
+黄铜	huang tong	60000
+工程塑料	gong cheng su liao	60000
+车削	che xiao	60000
+铣削	xi xue	60000
+钻孔	zuan kong	60000
+铰孔	jiao kong	60000
+攻丝	gong si	60000
+磨削	mo xue	60000
+电火花	dian huo hua	60000
+线切割	xian qie ge	60000
+激光切割	ji guang qie ge	60000
+折弯	zhe wan	60000
+氩弧焊	ya hu han	60000
+二保焊	er bao han	60000
+调质	tiao zhi	60000
+正火	zheng huo	60000
+淬火	cui huo	60000
+回火	hui huo	60000
+渗碳	shen tan	60000
+表面淬火	biao mian cui huo	60000
+发黑处理	fa hei chu li	60000
+阳极氧化	yang ji yang hua	60000
+公差配合	gong cha pei he	60000
+形位公差	xing wei gong cha	60000
+表面粗糙度	biao mian cu cao du	60000
+装配图	zhuang pei tu	60000
+零件图	ling jian tu	60000
+机械制图	ji xie zhi tu	60000
+剖视图	pou shi tu	60000
+间隙配合	jian xi pei he	60000
+过盈配合	guo ying pei he	60000
+过渡配合	guo du pei he	60000
+尺寸链	chi cun lian	60000
+三视图	san shi tu	60000
+电气原理图	dian qi yuan li tu	60000
+接线图	jie xian tu	60000
+元件清单	yuan jian qing dan	60000
+电气选型	dian qi xuan xing	60000
+控制柜	kong zhi gui	60000
+配电柜	pei dian gui	60000
+变频柜	bian pin gui	60000
+端子排	duan zi pai	60000
+导线截面	dao xian jie mian	60000
+主电路	zhu dian lu	60000
+控制电路	kong zhi dian lu	60000
+二次回路	er ci hui lu	60000
+三相电源	san xiang dian yuan	60000
+零线	ling xian	60000
+地线	di xian	60000
+铜芯线	tong xin xian	60000
+铝芯线	lv xin xian	60000
+额定电流	e ding dian liu	60000
+额定电压	e ding dian ya	60000
+功率因数	gong lv yin shu	60000
+视在功率	shi zai gong lv	60000
+有功功率	you gong gong lv	60000
+无功功率	wu gong gong lv	60000
+星三角启动	xing san jiao qi dong	60000
+自耦降压启动	zi ou jiang ya qi dong	60000
+软启动器	ruan qi dong qi	60000
+正反转控制	zheng fan zhuan kong zhi	60000
+点动控制	dian dong kong zhi	60000
+顺序控制	shun xu kong zhi	60000
+互锁	hu suo	60000
+自锁	zi suo	60000
+梯形图	ti xing tu	60000
+指令表	zhi ling biao	60000
+顺序功能图	shun xu gong neng tu	60000
+结构化文本	jie gou hua wen ben	60000
+模拟量输入	mo ni liang shu ru	60000
+数字量输出	shu zi liang shu chu	60000
+扫描周期	sao miao zhou qi	60000
+输入模块	shu ru mo kuai	60000
+输出模块	shu chu mo kuai	60000
+模拟量模块	mo ni liang mo kuai	60000
+高速计数器	gao su ji shu qi	60000
+脉冲输出	mai chong shu chu	60000
+定位指令	ding wei zhi ling	60000
+通信协议	tong xin xie yi	60000
+现场总线	xian chang zong xian	60000
+工业以太网	gong ye yi tai wang	60000
+组态软件	zu tai ruan jian	60000
+人机界面	ren ji jie mian	60000
+集散控制系统	ji san kong zhi xi tong	60000
+主从站	zhu cong zhan	60000
+从站地址	cong zhan di zhi	60000
+波特率	bo te lv	60000
+校验位	jiao yan wei	60000
+停止位	ting zhi wei	60000
+数控机床	shu kong ji chuang	60000
+加工中心	jia gong zhong xin	60000
+刀具补偿	dao ju bu chang	60000
+主轴	zhu zhou	60000
+进给	jin ji	60000
+夹具	jia ju	60000
+量具	liang ju	60000
+游标卡尺	you biao ka chi	60000
+千分尺	qian fen chi	60000
+伺服刀塔	si fu dao ta	60000
+工业机器人本体	gong ye ji qi ren ben ti	60000
+六轴机器人	liu zhou ji qi ren	60000
+四轴机器人	si zhou ji qi ren	60000
+协作机器人	xie zuo ji qi ren	60000
+末端执行器	mo duan zhi xing qi	60000
+夹爪	jia zhua	60000
+减速机	jian su ji	60000
+谐波减速器	xie bo jian su qi	60000
+RV减速器	rv jian su qi	60000
+示教器	shi jiao qi	60000
+工具坐标系	gong ju zuo biao xi	60000
+用户坐标系	yong hu zuo biao xi	60000
+轨迹规划	gui ji gui hua	60000
+重复定位精度	chong fu ding wei jing du	60000
+工作半径	gong zuo ban jing	60000
+安全围栏	an quan wei lan	60000
+安全光幕	an quan guang mu	60000
+急停回路	ji ting hui lu	60000
+安全继电器	an quan ji dian qi	60000
+单片机最小系统	dan pian ji zui xiao xi tong	60000
+复位电路	fu wei dian lu	60000
+晶振电路	jing zhen dian lu	60000
+中断服务程序	zhong duan fu wu cheng xu	60000
+寄存器配置	ji cun qi pei zhi	60000
+嵌入式系统	qian ru shi xi tong	60000
+烧录器	shao lu qi	60000
+在线调试	zai xian tiao shi	60000
+按键消抖	an jian xiao dou	60000
+数码管驱动	shu ma guan qu dong	60000
+共阴极	gong yin ji	60000
+共阳极	gong yang ji	60000
+段码	duan ma	60000
+位选	wei xuan	60000
+看门狗	kan men gou	60000
+电源管理	dian yuan guan li	60000
+万用表	wan yong biao	60000
+钳形电流表	qian xing dian liu biao	60000
+兆欧表	zhao ou biao	60000
+示波器	shi bo qi	60000
+验电器	yan dian qi	60000
+接地电阻测试仪	jie di dian zu ce shi yi	60000
+信号发生器	xin hao fa sheng qi	60000
+逻辑分析仪	luo ji fen xi yi	60000
+安全操作规程	an quan cao zuo gui cheng	60000
+停电验电	ting dian yan dian	60000
+挂接地线	gua jie di xian	60000
+工作票	gong zuo piao	60000
+操作票	cao zuo piao	60000
+两票三制	liang piao san zhi	60000
+触电急救	chu dian ji jiu	60000
+心肺复苏	xin fei fu su	60000
+点检	dian jian	60000
+备品备件	bei pin bei jian	60000
+故障排查	gu zhang pai cha	60000
+绝缘测试	jue yuan ce shi	60000
+相序检测	xiang xu jian ce	60000
+过载跳闸	guo zai tiao zha	60000
+缺相保护	que xiang bao hu	60000
+电机过热保护	dian ji guo re bao hu	60000
+短路故障	duan lu gu zhang	60000
+接地故障	jie di gu zhang	60000
+空载试运行	kong zai shi yun xing	60000
+带载试运行	dai zai shi yun xing	60000
+保护接地	bao hu jie di	60000
+保护接零	bao hu jie ling	60000
+电气自动化技术	dian qi zi dong hua ji shu	60000
+机电一体化技术	ji dian yi ti hua ji shu	60000
+工业机器人技术	gong ye ji qi ren ji shu	60000
+电气工程及其自动化	dian qi gong cheng ji qi zi dong hua	60000
+机械设计制造及其自动化	ji xie she ji zhi zao ji qi zi dong hua	60000
+自动化专业	zi dong hua zhuan ye	60000
+毕业设计	bi ye she ji	60000
+课程设计	ke cheng she ji	60000
+实训报告	shi xun bao gao	60000
+实习报告	shi xi bao gao	60000
+复习提纲	fu xi ti gang	60000
+考试重点	kao shi zhong dian	60000
+题库	ti ku	60000
+弄一下	nong yi xia	30000
+博途	bo tu	25000
+CATIA	catia	25000
+UG	ug	25000
+NX	nx	25000
+Creo	creo	25000
+ProE	proe	25000
+Inventor	inventor	25000
+ANSYS	ansys	25000
+ABAQUS	abaqus	25000
+MATLAB	matlab	25000
+Simulink	simulink	25000
+Keil	keil	25000
+MDK	mdk	25000
+IAR	iar	25000
+STM32CubeMX	stm32cubemx	25000
+Altium	altium	25000
+Designer	designer	25000
+立创EDA	li chuang eda	25000
+Multisim	multisim	25000
+Proteus	proteus	25000
+GX	gx	25000
+Works	works	25000
+WinCC	wincc	25000
+MCGS	mcgs	25000
+LabVIEW	labview	25000
+Git	git	25000
+VSCode	vscode	25000
+Visual	visual	25000
+Studio	studio	25000
+变频器参数设置	bian pin qi can shu she zhi	20000
+变频器接线图	bian pin qi jie xian tu	20000
+变频器故障代码	bian pin qi gu zhang dai ma	20000
+多段速运行	duo duan su yun xing	20000
+转矩提升	zhuan ju ti sheng	20000
+电机铭牌参数	dian ji ming pai can shu	20000
+电机绝缘测试	dian ji jue yuan ce shi	20000
+电机空载试验	dian ji kong zai shi yan	20000
+电机堵转试验	dian ji du zhuan shi yan	20000
+电机绕组重绕	dian ji rao zu chong rao	20000
+电机功率计算	dian ji gong lv ji suan	20000
+转矩计算	zhuan ju ji suan	20000
+惯量匹配	guan liang pi pei	20000
+传动比计算	chuan dong bi ji suan	20000
+轴承更换	zhou cheng geng huan	20000
+联轴器对中	lian zhou qi dui zhong	20000
+皮带张紧	pi dai zhang jin	20000
+链条润滑	lian tiao run hua	20000
+减速机漏油	jian su ji lou you	20000
+密封件更换	mi feng jian geng huan	20000
+液压油更换	ye ya you geng huan	20000
+系统压力不足	xi tong ya li bu zu	20000
+液压缸爬行	ye ya gang pa xing	20000
+机械设计计算	ji xie she ji ji suan	20000
+强度校核	qiang du jiao he	20000
+刚度校核	gang du jiao he	20000
+轴承选型	zhou cheng xuan xing	20000
+形位公差标注	xing wei gong cha biao zhu	20000
+基准选择	ji zhun xuan ze	20000
+剖视图绘制	pou shi tu hui zhi	20000
+机构运动简图	ji gou yun dong jian tu	20000
+自由度计算	zi you du ji suan	20000
+轴系结构设计	zhou xi jie gou she ji	20000
+示教编程	shi jiao bian cheng	20000
+运动学逆解	yun dong xue ni jie	20000
+正运动学	zheng yun dong xue	20000
+拖拽示教	tuo zhuai shi jiao	20000
+点位示教	dian wei shi jiao	20000
+关节限位	guan jie xian wei	20000
+手眼标定	shou yan biao ding	20000
+二维码定位	er wei ma ding wei	20000
+双通道安全	shuang tong dao an quan	20000
+机器人示教	ji qi ren shi jiao	20000
+轨迹示教	gui ji shi jiao	20000
+PLC编程软件	plc bian cheng ruan jian	20000
+三菱FX系列	san ling fx xi lie	20000
+西门子S7	xi men zi s7	20000
+欧姆龙CP	ou mu long cp	20000
+台达PLC	tai da plc	20000
+信捷PLC	xin jie plc	20000
+点位分配表	dian wei fen pei biao	20000
+IO分配	io fen pei	20000
+定时器指令	ding shi qi zhi ling	20000
+计数器指令	ji shu qi zhi ling	20000
+比较指令	bi jiao zhi ling	20000
+RS485通信	rs485 tong xin	20000
+RS232通信	rs232 tong xin	20000
+通信配置	tong xin pei zhi	20000
+定时器中断	ding shi qi zhong duan	20000
+ADC采样	adc cai yang	20000
+PWM输出	pwm shu chu	20000
+数码管动态扫描	shu ma guan dong tai sao miao	20000
+LCD1602	lcd1602	20000
+OLED屏	oled ping	20000
+电机驱动芯片	dian ji qu dong xin pian	20000
+继电器驱动	ji dian qi qu dong	20000
+场效应管驱动	chang xiao ying guan qu dong	20000
+三极管放大	san ji guan fang da	20000
+细分设置	xi fen she zhi	20000
+电子齿轮比	dian zi chi lun bi	20000
+伺服增益	si fu zeng yi	20000
+伺服刚度	si fu gang du	20000
+惯量比	guan liang bi	20000
+刚性调节	gang xing tiao jie	20000
+前馈补偿	qian kui bu chang	20000
+伺服调试	si fu tiao shi	20000
+伺服报警	si fu bao jing	20000
+编码器报警	bian ma qi bao jing	20000
+原点回归	yuan dian hui gui	20000
+软限位	ruan xian wei	20000
+硬限位	ying xian wei	20000
+回零方式	hui ling fang shi	20000
+液压系统原理	ye ya xi tong yuan li	20000
+气动回路设计	qi dong hui lu she ji	20000
+气管选型	qi guan xuan xing	20000
+气缸选型	qi gang xuan xing	20000
+电磁阀选型	dian ci fa xuan xing	20000
+电气识图	dian qi shi tu	20000
+电气制图	dian qi zhi tu	20000
+低压电工作业	di ya dian gong zuo ye	20000
+高压电工作业	gao ya dian gong zuo ye	20000
+停电挂牌	ting dian gua pai	20000
+验电接地	yan dian jie di	20000
+绝缘工器具	jue yuan gong qi ju	20000
+动火作业	dong huo zuo ye	20000
+配管配线	pei guan pei xian	20000
+维修工单	wei xiu gong dan	20000
+设备台账	she bei tai zhang	20000
+点检表	dian jian biao	20000
+润滑周期	run hua zhou qi	20000
+备件库存	bei jian ku cun	20000
+设备完好率	she bei wan hao lv	20000
+电气装置安装工程	dian qi zhuang zhi an zhuang gong cheng	15000
+低压配电设计规范	di ya pei dian she ji gui fan	15000
+供配电系统设计规范	gong pei dian xi tong she ji gui fan	15000
+建筑物防雷设计规范	jian zhu wu fang lei she ji gui fan	15000
+机械设备安全	ji xie she bei an quan	15000
+特低电压	te di dian ya	15000
+IP等级	ip deng ji	15000
