@@ -200,6 +200,101 @@ payload = {
 
 ---
 
+## 按 v 调出剪切板
+
+打出 `v`，候选栏列出最近的剪切板内容（最多 6 条），按数字键直接上屏全文。
+微信输入法的那个功能，用三个 Lua 文件 + 一个 Python 线程实现，不装任何额外软件。
+
+```
+打 v  →  1. 会议纪要： 1. 确认伺服电机型号 2. 下周提交方案   [21:01 · 27字]
+         2. 变频器参数 P0.01 设为 50Hz                      [21:01 · 19字]
+         3. https://github.com/birdf1/rime-ice-llm           [21:00 · 38字]
+按 1  →  上屏完整的三行会议纪要（不是预览那一行）
+```
+
+### 为什么显示预览、上屏全文要分两处做
+
+rime 候选的 `text` 字段**同时**是「屏幕显示」和「上屏内容」，没法只显示预览而上屏全文。
+把全文塞进 `text` 会让候选栏拉成一条长带（一段会议纪要横跨整个屏幕）。
+
+所以拆开：
+
+- `clip_translator.lua` 只放 **单行预览**（截断到 44 字，换行压成空格）
+- `clip_processor.lua` 排在 processors **最前面**，拦截 `v` + 数字键，
+  直接调 `env.engine:commit_text()` 上屏**完整原文**
+
+processor 必须排第一，是因为排在 `speller` 后面的话，按下的 `1` 会先被吃进
+composition，`ctx.input` 变成 `"v1"` 就不再等于 `"v"` 了。
+
+### 零宽空格是干嘛的
+
+候选文本尾部补了 N 个 U+200B（第 N 条补 N 个）。
+
+`uniquifier` 过滤器按 `text` 去重 —— 两条不同内容如果截断后的预览长得一样，会被吞掉一条，
+导致**菜单序号和 processor 的索引错位**（用户按 2 却上屏第 3 条）。
+零宽空格不显示，就算真被上屏也无害。
+
+### 和 symbols 的取舍
+
+rime-ice 的 `v` 本来是符号入口（`vfh` 符号、`vdn` 键盘、`vsz` 数学……）。
+
+| 输入 | 现在的结果 |
+|---|---|
+| `v` | 剪切板历史 |
+| `v` + **字母**（`vfh`、`vsz`） | **符号照常可用** |
+| `v` + **数字** | 被剪切板占用（原本是数字变体 ① ② ③） |
+
+只有 `v` + 数字 让位了。如果哪天要用回数字变体：
+
+```powershell
+# 建个空文件即可临时关闭剪切板
+New-Item -ItemType File "$env:RIME_LLM_DIR\clip_off"
+# 删除即恢复
+Remove-Item "$env:RIME_LLM_DIR\clip_off"
+```
+
+### 监控开销
+
+`clip_watcher.py` 用 ctypes 直调 Win32，**不用装 pywin32**：
+
+```
+每 0.4 秒 → GetClipboardSequenceNumber()   只读一个计数器，不加锁、不开剪切板
+           ↓ 序号变了才
+           OpenClipboard + GetClipboardData 读内容
+```
+
+所以空闲时几乎零开销，也不会跟别的程序抢剪切板。作为后台线程挂在 `llm_daemon.py` 里，
+**不额外起 Python 进程**。
+
+支持文本和文件列表（复制文件时给出路径），自动去重、最多留 40 条、单条上限 4000 字。
+
+### 相关文件
+
+| 文件 | 作用 |
+|---|---|
+| `clip_watcher.py` | 剪切板监控线程（ctypes，无依赖） |
+| `lua/clip_common.lua` | 读缓存 / 反转义 / 生成预览 |
+| `lua/clip_translator.lua` | `v` → 候选列表 |
+| `lua/clip_processor.lua` | `v`+数字 → 上屏全文 |
+| `tests/test_clip_lua.py` | lupa 单测 23/23 |
+
+配置改动（`rime_ice.custom.yaml`）：
+
+```yaml
+  engine/processors:
+    - lua_processor@*clip_processor        # 必须在最前
+    - lua_processor@*select_character
+    - ascii_composer
+    # ... 其余保持原样
+
+  engine/translators:
+    - lua_translator@*clip_translator      # 剪切板
+    - lua_translator@*llm_translator
+    # ... 其余保持原样
+```
+
+---
+
 ## 已知坑（都踩过）
 
 ### 1. Lua 打不开中文路径 ⚠️ 最容易中招
