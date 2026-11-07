@@ -384,6 +384,77 @@ rep = re.sub(r"\$(\d)", r"\\\1", rep)   # 先转换
 librime-lua 是**懒加载**的，部署日志里查不到 Lua 语法错误。
 验证办法：在模块顶层写个 marker 文件，看它有没有被创建。
 
+### 9. librime-lua 沙箱里不能用 `os.getenv`
+
+```lua
+-- ❌ 整个模块静默失效，而且 rime 的 ERROR 日志里什么都没有
+local DIR = os.getenv("RIME_LLM_DIR") or "E:/APPs/rime-llm"
+-- ✅
+local DIR = "E:/APPs/rime-llm"
+```
+
+`os.getenv` 在 librime-lua 沙箱里可能不存在，调用会抛错 → `require` 失败 →
+translator 直接消失。**错误不进 rime 日志**，只能靠自己在模块顶层写 marker 文件验证：
+
+```lua
+do
+  local f = io.open(DIR .. "/clip_loaded.marker", "w")
+  if f then f:write(os.date("%H:%M:%S") .. " loaded\n") f:close() end
+end
+```
+
+这也是为什么所有路径都用硬编码 —— 环境变量的便利在这里换不来。
+
+### 10. 绝对不要把 `yield` 包进 `pcall` ⚠️ 最坑的一个
+
+```lua
+-- ❌ 候选不出来，而且 yield 之后的日志一行都不写
+local ok, err = pcall(function()
+  yield(cand)
+end)
+```
+
+`yield` 是**协程挂起**，不是普通函数调用。包在 `pcall` 里会破坏协程边界，
+表现是：**候选不出现，且连后面的代码都不执行**。查了两小时才定位。
+
+正确做法是把「算数据」和「yield」分开：
+
+```lua
+-- ✅ 先把候选全部算好、日志写完，最后统一 yield
+local out = {}
+for i, it in ipairs(items) do
+  out[#out + 1] = { text = ..., comment = ... }
+end
+common.dbg("准备 " .. #out .. " 条候选")     -- 一定落盘
+for _, c in ipairs(out) do
+  yield(Candidate("clip", sstart, send, c.text, c.comment))
+end
+```
+
+同理，`M.func` 整体也不能套 `pcall`。
+
+### 11. Python `write_text` 在 Windows 会写 CRLF
+
+```python
+tmp.write_text(body, encoding="utf-8")              # ❌ 换成 
+
+tmp.write_text(body, encoding="utf-8", newline="")   # ✅ 强制 LF
+```
+
+Lua 的 `f:lines()` 按 `
+` 切分，行尾会残留 ``，
+读出来带看不见的控制字符，`string.format("%q")` 打日志时特别迷惑。
+
+### 12. `tools/test_ime_gui.ps1` 的两个坑
+
+Win11 记事本是商店应用，`MainWindowHandle = 0`，`SetForegroundWindow` 抢不到焦点，
+打的字进不了输入法。所以自己建 WinForms 窗口（HWND 是自己的，焦点稳）。
+
+另外 `Add_Tick` 里的脚本块是**新作用域**，闭包外层的 `$t` 取不到，会报
+`You cannot call a method on a null-valued expression`。直接顺序执行 + `DoEvents` 更可靠。
+
+注意：`SendKeys` 要逐字符发，`{ESC}` 这种写法会被拆成 `{`、`E`、`S`、`C`、`}` 原样打出。
+
 ---
 
 ## 模糊拼音

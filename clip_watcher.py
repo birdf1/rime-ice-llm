@@ -142,7 +142,9 @@ class ClipboardWatcher(threading.Thread):
         tmp = self.out_file.with_suffix(".tmp")
         try:
             self.out_file.parent.mkdir(parents=True, exist_ok=True)
-            tmp.write_text(body, encoding="utf-8")
+            # newline="" 强制 LF：Windows 上 write_text 默认会把 \n 转成 \r\n，
+            # Lua 的 f:lines() 按 \n 切分，行尾会残留 \r，容易读出诡异的空字符
+            tmp.write_text(body, encoding="utf-8", newline="")
             tmp.replace(self.out_file)                # 原子替换，Lua 不会读到半个文件
             self._dirty = False
         except OSError:

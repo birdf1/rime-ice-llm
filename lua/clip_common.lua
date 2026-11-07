@@ -3,32 +3,56 @@
 --
 -- ⚠️ 数据目录必须是纯 ASCII 路径。
 --    Lua 的 io.open 在 Windows 上走 ANSI(GBK) 的 fopen，
---    遇到 "小狼毫" 这类中文目录会静默返回 nil —— 不报错、不打印。
+--    遇到 "小狼毫" 这类中文目录会返回 "Illegal byte sequence"，而且不报错。
+--    所以数据目录单独放在 E:/APPs/rime-llm（纯英文）。
+--
+-- ⚠️ 不要用 os.getenv()：librime-lua 沙箱里 os 库不保证带 getenv，
+--    调用会抛错导致整个模块加载失败，而且错误不进 rime 日志，极难发现。
+--    这里跟 llm_translator.lua 一样用硬编码路径。
 
 local M = {}
 
-local DIR = os.getenv("RIME_LLM_DIR") or "E:/APPs/rime-llm"
+local DIR = "E:/APPs/rime-llm"
 M.CACHE = DIR .. "/clip_cache.txt"
 M.DIR = DIR
+local DBG = DIR .. "/clip_debug.log"
 
--- 反转义：Python 侧写的是 \\  \n  \t
-local function unescape(s)
-  local out = s:gsub("\\(.)", function(c)
-    if c == "n" then return "\n" end
-    if c == "t" then return "\t" end
-    if c == "\\" then return "\\" end
-    return c
-  end)
-  return out
+-- 加载标记：验证模块真的被 require 了
+-- （librime-lua 懒加载，部署时不报语法错，只能靠这个确认）
+do
+  local f = io.open(DIR .. "/clip_loaded.marker", "w")
+  if f then
+    f:write((os.date and os.date("%Y-%m-%d %H:%M:%S") or "?") .. " clip_common loaded\n")
+    f:close()
+  end
 end
 
+local DEBUG = false   -- 排障时改 true，会在 <DIR>/clip_debug.log 记流水
+
+function M.dbg(msg)
+  if not DEBUG then return end
+  local f = io.open(DBG, "a")
+  if f then
+    f:write((os.date and os.date("%H:%M:%S") or "?") .. " " .. tostring(msg) .. "\n")
+    f:close()
+  end
+end
 
 -- 开关：<DIR>/clip_off 存在就停用（不改配置就能临时关掉）
--- 这样万一哪天想用 v1 符号，创建一个空文件即可
 function M.enabled()
   local f = io.open(DIR .. "/clip_off", "r")
   if f then f:close() return false end
   return true
+end
+
+-- 反转义：Python 侧写的是 \\  \n  \t
+local function unescape(s)
+  return (s:gsub("\\(.)", function(c)
+    if c == "n" then return "\n" end
+    if c == "t" then return "\t" end
+    if c == "\\" then return "\\" end
+    return c
+  end))
 end
 
 -- 读前 limit 条。格式：<序号>\t<时间>\t<正文>
@@ -36,19 +60,24 @@ function M.load(limit)
   limit = limit or 6
   local out = {}
   local f = io.open(M.CACHE, "r")
-  if not f then return out end
+  if not f then
+    M.dbg("io.open 失败: " .. M.CACHE)
+    return out
+  end
   for line in f:lines() do
+    -- 行尾可能带 \r（Windows 换行），下面会把 \r 去掉
     local idx, tm, body = line:match("^(%d+)\t([^\t]*)\t(.*)$")
     if body and idx then
       out[#out + 1] = {
         n = tonumber(idx),
-        time = tm,
+        time = (tm:gsub("\r", "")),
         text = unescape(body),
       }
       if #out >= limit then break end
     end
   end
   f:close()
+  M.dbg(string.format("load -> %d 条", #out))
   return out
 end
 
@@ -61,8 +90,8 @@ end
 -- 生成单行预览，超长按 UTF-8 安全截断
 function M.preview(s, width)
   width = width or 38
-  s = s:gsub("[\r\n\t]+", " ")       -- 换行制表 -> 空格
-  s = s:gsub("%s+", " ")             -- 连续空白压成一个
+  s = s:gsub("[\r\n\t]+", " ")
+  s = s:gsub("%s+", " ")
   s = s:gsub("^%s+", ""):gsub("%s+$", "")
   if M.utf8_len(s) <= width then return s end
 

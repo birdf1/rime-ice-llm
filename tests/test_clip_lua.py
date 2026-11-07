@@ -12,13 +12,12 @@ test_clip_lua.py —— 剪切板 Lua 模块单测（用 lupa 真解释器）
   - 不要用 unpack_returned_tuples，否则 lua table 会被拆成 tuple
 """
 
-import os
 import sys
 from pathlib import Path
 
 import lupa
 
-RIME = Path(os.environ.get("RIME_USER_DIR", r"E:\APPs\小狼毫"))
+RIME = Path(__file__).resolve().parent      # 本脚本放在用户目录根
 LUA_DIR = RIME / "lua"
 
 PASS = FAIL = 0

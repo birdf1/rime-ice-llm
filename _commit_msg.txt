@@ -1,0 +1,32 @@
+修复：按 v 调剪切板不生效
+
+三个真实根因：
+
+1) clip_common.lua 用了 os.getenv("RIME_LLM_DIR")
+   librime-lua 沙箱里没有这个函数，require 直接抛错，
+   整个 translator 静默消失 —— 而且错误不进 rime 的 ERROR 日志。
+   改为硬编码路径（和 llm_translator.lua 一致）。
+
+2) yield 被包在 pcall 里
+   yield 是协程挂起，包在 pcall 里会破坏协程边界：
+   候选不出来，且 yield 之后的代码一行都不执行。
+   改为先把候选全部算好、日志写完，最后统一 yield。
+
+3) clip_watcher 用 write_text 默认写 CRLF
+   Lua 的 f:lines() 按 \n 切分，行尾残留 \r。
+   加 newline="" 强制 LF。
+
+顺带：
+- 模块顶层写 clip_loaded.marker，验证懒加载是否成功
+- clip_debug.log（DEBUG 开关，默认关），排障时打开
+- seg._end 取不到时兜底用 start + #input
+- 新增 tools/test_ime_gui.ps1：自建 WinForms 窗口做 GUI 打字测试
+  （记事本是商店应用抢不到焦点，这条路之前一直走不通）
+
+实测（tools/test_ime_gui.ps1）：
+  nihao1  -> 你好                    普通拼音正常
+  vbd1    -> 、                      符号正常
+  v1      -> 完整粘贴剪切板第 1 条（多行也完整）
+  nv1     -> 率                      v 作韵母正常
+
+测试：23/23 + 14/14 + 7/7 + 18/18 全通过

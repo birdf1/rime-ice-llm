@@ -21,6 +21,7 @@ local kAccepted = 1
 local kNoop = 2
 
 function M.init(env)
+  common.dbg("clip_processor.init 被调用")
 end
 
 function M.func(key, env)
@@ -42,8 +43,12 @@ function M.func(key, env)
 
   local items = common.load(SHOW_MAX)
   local it = items[n]
-  if not it or it.text == "" then return kNoop end
+  if not it or it.text == "" then
+    common.dbg(string.format("按了 %d 但没这条", n))
+    return kNoop
+  end
 
+  common.dbg(string.format("v+%d -> 上屏 %d 字", n, common.utf8_len(it.text)))
   env.engine:commit_text(it.text)
   ctx:clear()
   return kAccepted
