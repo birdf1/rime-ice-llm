@@ -46,12 +46,13 @@ from datetime import datetime
 from pathlib import Path
 
 # ─────────────────────────── 配置 ───────────────────────────
-RIME_DIR   = Path(os.environ.get("RIME_USER_DIR", r"E:\APPs\小狼毫"))
+RIME_DIR   = Path(r"E:\APPs\小狼毫")
 # ⚠️ 数据目录必须纯 ASCII：Lua 的 io.open 在 Windows 上打不开中文路径
-DATA_DIR   = Path(os.environ.get("RIME_LLM_DIR", r"E:\APPs\rime-llm"))
+DATA_DIR   = Path(r"E:\APPs\rime-llm")
 REQ_FILE   = DATA_DIR / "llm_req.txt"
 CACHE_FILE = DATA_DIR / "llm_cache.txt"
 LOG_FILE   = DATA_DIR / "llm_daemon.log"
+CLIP_FILE  = DATA_DIR / "clip_cache.txt"   # 剪切板历史（供 lua 读）
 
 OLLAMA     = "http://127.0.0.1:11434"
 # 模型选择（2026-11-06 横评实测后定，别再迷信大模型）
@@ -480,6 +481,13 @@ def main() -> int:
         live = sum(1 for v in c.values() if int(time.time()) - v[1] < CACHE_TTL)
         print(f"缓存   : {len(c)} 条（有效 {live}）")
         print(f"待处理 : {len(drain_requests())} 条")
+        try:
+            n = 0
+            if CLIP_FILE.exists():
+                n = sum(1 for _ in CLIP_FILE.open(encoding="utf-8"))
+            print(f"剪切板 : {n} 条历史（{CLIP_FILE}）")
+        except OSError:
+            pass
         return 0
 
     if args.unload:
@@ -518,6 +526,15 @@ def main() -> int:
         n = run_once()
         print(f"处理 {n} 条")
         return 0
+
+    # 剪切板监控作为后台线程，不额外起进程（省内存）
+    try:
+        from clip_watcher import ClipboardWatcher
+        watcher = ClipboardWatcher(CLIP_FILE)
+        watcher.start()
+        log(f"剪切板监控已启动 -> {CLIP_FILE}")
+    except Exception as e:
+        log(f"剪切板监控未启动: {e}（不影响打字和联想）")
 
     log(f"启动 | 模型={MODEL} | 轮询={POLL}s | 任务=前文联写")
     load_wordlist()
