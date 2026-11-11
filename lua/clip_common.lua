@@ -17,6 +17,11 @@ M.CACHE = DIR .. "/clip_cache.txt"
 M.DIR = DIR
 local DBG = DIR .. "/clip_debug.log"
 
+-- 跨组件共享状态：filter 写入，processor 读取。
+-- librime-lua 的所有组件跑在同一个 Lua state 里，模块级表可以直接共享。
+-- 这是「processor 只在候选真的显示了才抢数字键」的关键保险。
+M.state = { active = false, count = 0, items = {} }
+
 -- 加载标记：验证模块真的被 require 了
 -- （librime-lua 懒加载，部署时不报语法错，只能靠这个确认）
 do
@@ -27,7 +32,7 @@ do
   end
 end
 
-local DEBUG = false   -- 排障时改 true，会在 <DIR>/clip_debug.log 记流水
+local DEBUG = false  -- 排障时改 true，会在 <DIR>/clip_debug.log 记流水（默认关闭，避免长期写盘）
 
 function M.dbg(msg)
   if not DEBUG then return end

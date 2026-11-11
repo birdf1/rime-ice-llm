@@ -1,0 +1,15 @@
+# 统一用 LF。小狼毫的 Lua / YAML 走 LF 最省事，
+# 以前被 CRLF 坑过：Lua 用 f:lines() 会把 \r 留在行尾，字符串比较全部失败。
+* text=auto eol=lf
+
+*.lua    text eol=lf
+*.yaml   text eol=lf
+*.py     text eol=lf
+*.md     text eol=lf
+*.ps1    text eol=lf
+*.txt    text eol=lf
+
+*.png    binary
+*.jpg    binary
+*.exe    binary
+*.bin    binary

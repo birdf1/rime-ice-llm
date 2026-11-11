@@ -19,7 +19,8 @@ param(
     [string]$Keys = "v",
     [int]$KeyGapMs = 200,
     [int]$SettleMs = 1200,
-    [int]$WarmupMs = 600
+    [int]$WarmupMs = 600,
+    [string]$ShotPath = ""
 )
 
 Add-Type -AssemblyName System.Windows.Forms
@@ -32,6 +33,27 @@ public class W32 {
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
     [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")] public static extern bool BringWindowToTop(IntPtr hWnd);
+    [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
+    [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
+    [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+    [DllImport("user32.dll")] public static extern IntPtr SetFocus(IntPtr hWnd);
+
+    // Windows 有前台锁：别的进程占着前台时 SetForegroundWindow 会静默失败。
+    // 标准绕法是把本线程的输入队列挂到当前前台线程上，再抢，抢完解绑。
+    public static bool ForceForeground(IntPtr hwnd) {
+        uint fgPid;
+        uint fgThread = GetWindowThreadProcessId(GetForegroundWindow(), out fgPid);
+        uint myThread = GetCurrentThreadId();
+        bool attached = false;
+        if (fgThread != myThread) {
+            attached = AttachThreadInput(myThread, fgThread, true);
+        }
+        BringWindowToTop(hwnd);
+        bool ok = SetForegroundWindow(hwnd);
+        SetFocus(hwnd);
+        if (attached) AttachThreadInput(myThread, fgThread, false);
+        return ok;
+    }
 }
 "@
 
@@ -49,8 +71,7 @@ $form.Controls.Add($tb)
 
 $form.Add_Shown({
     $form.Activate()
-    [void][W32]::BringWindowToTop($form.Handle)
-    [void][W32]::SetForegroundWindow($form.Handle)
+    [void][W32]::ForceForeground($form.Handle)
     $tb.Focus()
     [System.Windows.Forms.Application]::DoEvents()
     Start-Sleep -Milliseconds $WarmupMs
@@ -72,6 +93,18 @@ $form.Add_Shown({
     }
 
     $script:result = $tb.Text
+
+    # 截屏：把候选栏拍下来，才能确认剪切板候选到底有没有显示
+    if ($ShotPath) {
+        $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+        $bmp = New-Object System.Drawing.Bitmap($b.Width, $b.Height)
+        $g = [System.Drawing.Graphics]::FromImage($bmp)
+        $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+        $bmp.Save($ShotPath, [System.Drawing.Imaging.ImageFormat]::Png)
+        $g.Dispose(); $bmp.Dispose()
+        Write-Host "  截图已存: $ShotPath"
+    }
+
     $form.Close()
 })
 

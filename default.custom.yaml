@@ -1,0 +1,17 @@
+# encoding: utf-8
+# 全局补丁：覆盖 default.yaml 的默认值
+patch:
+  # ⚠️ 只留全拼。t9 是九宫格方案，它的规则会把数字键当成字母
+  #    （2=ABC、3=DEF……），一旦误切到 t9，数字键就再也选不了字，
+  #    表现就是「候选栏有 1.呀 2.亚，按 2 却出来别的东西」。
+  schema_list:
+    - schema: rime_ice
+
+  # 关掉 librime 1.13 的数字分隔符功能，避免干扰数字选字
+  punctuator/digit_separators: ""
+
+  # ⚠️ CapsLock 默认会直接切英文模式（good_old_caps_lock: true）。
+  #    按下去以后字母全部原样输入、没有候选栏、数字键也不再选字，
+  #    表现就是「输入法坏了」。这里关掉，CapsLock 只决定大小写，
+  #    不影响中英文状态。
+  ascii_composer/good_old_caps_lock: false

@@ -95,10 +95,12 @@ New-Item -ItemType Directory -Force E:\APPs\rime-llm
 
 # 3. 把本仓库的文件放进小狼毫用户目录
 #    llm_daemon.py        -> 用户目录根
-#    lua/llm_translator.lua -> 用户目录\lua\
+#    clip_watcher.py      -> 用户目录根
+#    lua/*.lua            -> 用户目录\lua\
 #    mech.dict.yaml       -> 用户目录根
 #    rime_ice.custom.yaml -> 覆盖（或合并 patch 段）
 #    rime_ice.dict.yaml   -> 覆盖（或合并 import_tables）
+#    default.custom.yaml  -> 用户目录根（只留 rime_ice 方案，见「已知坑」13）
 
 # 4. 构建词表
 python build_wordlist.py
@@ -273,25 +275,31 @@ Remove-Item "$env:RIME_LLM_DIR\clip_off"
 | 文件 | 作用 |
 |---|---|
 | `clip_watcher.py` | 剪切板监控线程（ctypes，无依赖） |
-| `lua/clip_common.lua` | 读缓存 / 反转义 / 生成预览 |
-| `lua/clip_translator.lua` | `v` → 候选列表 |
+| `lua/clip_common.lua` | 读缓存 / 反转义 / 生成预览 / 共享状态 |
+| `lua/clip_filter.lua` | `v` → 候选列表（**filter，不是 translator**） |
 | `lua/clip_processor.lua` | `v`+数字 → 上屏全文 |
-| `tests/test_clip_lua.py` | lupa 单测 23/23 |
+| `lua/clip_translator.lua` | 早期方案，已被 filter 取代，仅留作参考 |
+| `tests/test_clip_lua.py` | lupa 单测 39/39 |
 
 配置改动（`rime_ice.custom.yaml`）：
 
 ```yaml
+  engine/filters:
+    - lua_filter@*clip_filter              # 剪切板候选，必须在最前
+    - simplifier
+    - uniquifier
+
   engine/processors:
     - lua_processor@*clip_processor        # 必须在最前
     - lua_processor@*select_character
     - ascii_composer
     # ... 其余保持原样
-
-  engine/translators:
-    - lua_translator@*clip_translator      # 剪切板
-    - lua_translator@*llm_translator
-    # ... 其余保持原样
 ```
+
+> 为什么是 filter 不是 translator：见「已知坑」第 10 条之后的分段竞争部分。
+> `lua_translator` 的输出会被 rime 的分词竞争整段丢掉——只要同一个输入还有
+> `script_translator` / `melt_eng` 产出，Lua 那一路就完全消失（不是排到后面页，
+> 是整个没了）。`lua_filter` 拿到的是合并后的候选流，yield 出来的一定进菜单。
 
 ---
 
@@ -442,7 +450,8 @@ tmp.write_text(body, encoding="utf-8", newline="")   # ✅ 强制 LF
 ```
 
 Lua 的 `f:lines()` 按 `
-` 切分，行尾会残留 ``，
+` 切分，行尾会残留 `
+`，
 读出来带看不见的控制字符，`string.format("%q")` 打日志时特别迷惑。
 
 ### 12. `tools/test_ime_gui.ps1` 的两个坑
@@ -454,6 +463,93 @@ Win11 记事本是商店应用，`MainWindowHandle = 0`，`SetForegroundWindow` 
 `You cannot call a method on a null-valued expression`。直接顺序执行 + `DoEvents` 更可靠。
 
 注意：`SendKeys` 要逐字符发，`{ESC}` 这种写法会被拆成 `{`、`E`、`S`、`C`、`}` 原样打出。
+
+### 13. 数字键选不中候选，先查方案是不是被切成了 `t9` ⚠️ 排查优先级最高
+
+现象：候选栏明明显示 `1. 呀  2. 亚  3. 压`，按 `2` 却不出「亚」，甚至什么都不上屏；
+长词（如 `ninengjianli`）干脆没有候选栏，整串字母漏进编辑框。
+
+`user.yaml` 里能看到真凶：
+
+```yaml
+var:
+  previously_selected_schema: t9        # ← 用的是九宫格方案，不是 rime_ice
+  schema_access_time:
+    t9: 1794319548
+```
+
+`t9` 是九宫格方案，它的键盘映射是 **2=ABC、3=DEF、4=GHI……**，数字键在它的规则里是
+**字母输入键**，根本不存在「用数字选字」这件事：
+
+- 打 `ya` 再按 `2`，真实编码变成 `yaa`，候选于是出现 `呀啊 / 压啊 / 鸭啊`
+- 单独按 `2`，候选是 `1. 啊  2. 阿  3. 吖`（就是拼音 `a`）
+- 日志里会刷屏 `error creating processor: 't9_processor'`
+
+修法是两层：`user.yaml` 切回 `rime_ice`，同时把 t9 从 `schema_list` 里删掉，断掉再被误切的路。
+
+```yaml
+# default.custom.yaml
+patch:
+  schema_list:
+    - schema: rime_ice
+```
+
+如果还要保留双拼，就把 `double_pinyin_*` 一并列在下面，但**别放 `t9`**。
+
+另一个容易连带踩的点：`punctuator/digit_separators`（librime >= 1.13 的新功能）会让
+`punctuator` 捕获数字键用来拼数字，而 `punctuator` 排在 `selector` **前面**，也可能干扰选字。
+不确定就一起关掉：
+
+```yaml
+patch:
+  punctuator/digit_separators: ""
+```
+
+### 14. `speller/max_code_length` 限的是整串输入长度，不是单个音节
+
+为了「省资源」把它设成 `6`，结果是任何超过 6 个字母的输入（`ninengjianli` 有 12 个）
+整段被丢弃，字母直接漏进编辑框，看起来就像「输入法没有候选」。
+
+rime-ice 默认是 100，**别动它**。真嫌重就砍词库和 translator，别砍这个。
+
+### 15. `SendKeys` 和 `keybd_event(scan=0)` 都测不了输入法
+
+排查这类问题最费时间的其实不是输入法，而是自动化测试本身：
+
+| 方式 | 问题 |
+|---|---|
+| `SendKeys::SendWait` | 走 JournalHook，窗口一多就经常打不进目标窗口，截图里连字母都没有 |
+| `keybd_event(vk, 0, ...)` | 扫描码填 0，输入法拿不到物理键位，转不出字符 |
+| `SendInput` + `wVk` + `wScan` 同时给 | Windows 会按扫描码解析，数字键和字母键规则不同，数字键直接失效 |
+
+可靠做法是用 `SendInput`，**只给 `wVk`，`wScan` 留 0**，见 `tools/test_ime_vk.ps1`。
+
+另外一定要留一个对照组：字母后面按**空格**（应该上屏第 1 候选）。
+空格能上屏、数字不能 → 问题在数字键的处理链；两者都不能 → 问题在测试脚本或焦点。
+这一条能省掉大量瞎猜。
+
+### 16. CapsLock 一按，输入法就「坏」了 ⚠️ 和第 13 条并列最常中招
+
+`default.yaml` 默认 `good_old_caps_lock: true`，意思是**CapsLock 直接切换中英文模式**。
+按下去以后：
+
+- 字母全部原样输入，没有候选栏 —— 看起来像「输入法没启动」
+- 数字键变成数字字符，不再选字 —— 看起来像「数字键选不中候选」
+- 打出来的全是大写，比如 `ya2` → `YA2`
+
+这个状态不会自己恢复，而且很多人根本不会注意到 CapsLock 灯。排查顺序上应该和
+第 13 条的方案检查放在一起，先排除掉。
+
+建议直接关掉，让 CapsLock 只决定大小写，不碰中英文状态：
+
+```yaml
+# default.custom.yaml
+patch:
+  ascii_composer/good_old_caps_lock: false
+```
+
+顺带一提，`default.yaml` 里还有 `ascii_composer/Caps_Lock: clear`，那是「按 CapsLock
+清空当前输入」，属于另一回事。
 
 ---
 
@@ -543,16 +639,33 @@ if word.startswith("伺服"):
 ## 测试
 
 ```powershell
-python tests/test_llm_translator.py   # Lua 模块单测（需要 lupa）  14/14
+python tests/test_clip_lua.py         # 剪切板三件套（语法 / 行为 / 护栏）  39/39
+python tests/test_llm_translator.py   # LLM 译码器 Lua 模块单测  14/14
 python tests/test_fuzzy_algebra.py    # 模糊拼音（解析 build 出的 schema）  7/7
 python tests/test_wordlist.py         # 词表校验（专业词通过 / 碎片拦截）  18/18
 ```
 
-`tests/test_llm_translator.py` 用 [lupa](https://pypi.org/project/lupa/) 把 Lua 模块塞进真解释器跑，
+`tests/test_clip_lua.py` 和 `tests/test_llm_translator.py` 用 [lupa](https://pypi.org/project/lupa/) 把 Lua 模块塞进真解释器跑，
 不需要部署、不需要打字。注意 lua 里 `yield` 是保留字，测试时要把 `yield(` 换成 `_yield(`。
 
-**GUI 打字测试在 Win11 上不可用**：记事本是商店应用，`MainWindowHandle = 0`，
-`SetForegroundWindow` 抢不到焦点。这类验证走数据级（解析 schema / 查词表）。
+**GUI 打字测试**用 `tools/test_ime_vk.ps1`（自建 WinForms 窗口 + `SendInput` 只发 `wVk`）：
+
+```powershell
+# 打 ya 再按 2，期望上屏「亚」
+pwsh -File tools/test_ime_vk.ps1 -Seq "y,a,2"
+
+# 长词
+pwsh -File tools/test_ime_vk.ps1 -Seq "n,i,n,e,n,g,j,i,a,n,l,i,1"
+
+# 剪切板
+pwsh -File tools/test_ime_vk.ps1 -Seq "v,1"
+
+# 对照组：空格（永远应该上屏第 1 候选）
+pwsh -File tools/test_ime_vk.ps1 -Seq "n,i,h,a,o,0x20"
+```
+
+`-ShotPath` 可以把当时的 preedit 和候选栏截图存下来，判读比看返回值直观得多。
+详见「已知坑」15。
 
 ---
 

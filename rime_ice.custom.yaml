@@ -26,7 +26,6 @@ patch:
   #          长词优先、降低英文、置顶候选、错音提示
   #    这些都属于"偶尔用一次，但每次按键都收费"
   engine/translators:
-    - lua_translator@*clip_translator    # 剪切板：打 v 出历史
     - lua_translator@*llm_translator
     - punct_translator
     - script_translator
@@ -48,6 +47,11 @@ patch:
     - express_editor
 
   engine/filters:
+    # 剪切板：打 v 时把历史插到候选流最前面。
+    # 必须用 filter 而不是 translator —— 实测 translator 的候选会被
+    # 分词竞争整段丢掉（只要 script_translator/melt_eng 也有产出）。
+    # filter 拿到的是合并后的候选流，在这里 yield 必定进菜单。
+    - lua_filter@*clip_filter
     - simplifier
     - uniquifier
 
@@ -79,7 +83,10 @@ patch:
   # ⑤ 性能：关掉会拖慢的选项
   translator/enable_completion: true   # 逐字提示保留（很有用且便宜）
   translator/enable_sentence: false    # 整句转换很贵，长句时尤其明显
-  speller/max_code_length: 6           # 限制最大编码长度，避免超长串
+  # ⚠️ 不要限制 max_code_length！
+  #    它限的是「整串输入」长度，不是单个音节。设成 6 会让 ninengjianli（12 字母）
+  #    整段被丢弃，字母直接漏进输入框，看起来就像「输入法没候选」。
+  #    rime-ice 默认是 100，别动。
 
   # ⑥ 模糊音（rime-ice 默认全关，微信默认开）
   #    平翘舌 / 前后鼻音 / n-l / f-h / r-l，外加 rime-ice 自带的 30+ 条错序容错

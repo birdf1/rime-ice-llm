@@ -2,7 +2,7 @@
 test_clip_lua.py —— 剪切板 Lua 模块单测（用 lupa 真解释器）
 
 不需要部署、不需要打字，直接验证：
-  1. 三个 lua 文件的语法
+  1. 四个 lua 文件的语法
   2. clip_common 的转义/预览/截断
   3. clip_translator 对 "v" 和 "vv"/"v1" 的行为
   4. clip_processor 只对 "v"+数字 生效
@@ -19,6 +19,11 @@ import lupa
 
 RIME = Path(__file__).resolve().parent      # 本脚本放在用户目录根
 LUA_DIR = RIME / "lua"
+
+# 仓库里 lua 在根目录（tests/ 的同级），用户目录里则和本脚本同级。
+# 两种布局都兼容一下，免得换个地方跑就报「文件不存在」。
+if not LUA_DIR.is_dir():
+    LUA_DIR = RIME.parent / "lua"
 
 PASS = FAIL = 0
 
@@ -40,7 +45,7 @@ def s(x):
 
 def make_lua():
     rt = lupa.LuaRuntime()
-    for name in ("clip_common", "clip_translator", "clip_processor"):
+    for name in ("clip_common", "clip_filter", "clip_translator", "clip_processor"):
         src = (LUA_DIR / f"{name}.lua").read_text(encoding="utf-8").replace("yield(", "_yield(")
         rt.execute(f'package.preload["{name}"] = function()\n{src}\nend')
 
@@ -69,9 +74,9 @@ def main():
     print("=== 1. Lua 语法 ===")
     try:
         rt = make_lua()
-        check("三个文件语法正确", True)
+        check("四个文件语法正确", True)
     except Exception as e:
-        check("三个文件语法正确", False, str(e))
+        check("四个文件语法正确", False, str(e))
         return 1
 
     g = rt.globals()
@@ -169,6 +174,19 @@ def main():
         ret = pr.func(key, env)
         return ret, eng.committed, ctx.cleared
 
+    # ① 先验证「护栏」：没跑过 filter、候选没真正显示时，绝不许接管数字键。
+    #    这条是踩过坑加的 —— 之前只判断 input=='v' 就抢数字，
+    #    结果用户按 1 想选「VFD」，被塞了一整段剪切板内容。
+    g.COMMON.state.active = False
+    ret, committed, cleared = run_proc("v", FakeKey("1"))
+    check("state 未激活时 v + 1 不接管（护栏）",
+          ret == 2 and committed is None, f"返回值 {ret}")
+
+    # ② 模拟 filter 已经把候选显示出来
+    g.COMMON.state.active = True
+    g.COMMON.state.count = 3
+    g.COMMON.state.items = common.load(6)
+
     ret, committed, cleared = run_proc("v", FakeKey("1"))
     check("v + 1 → 接受（返回 1）", ret == 1, f"返回值 {ret}")
     c = s(committed)
@@ -189,6 +207,68 @@ def main():
 
     ret, _, _ = run_proc("v", FakeKey("a"))
     check("v + 字母不接管（留给 symbols）", ret == 2, f"返回值 {ret}")
+
+    print("\n=== 5. clip_filter ===")
+    rt.execute('FL = require("clip_filter")')
+    fl = g.FL
+    fl.init(rt.table())
+
+    # 造一个假的 input 流，模拟上游译码器已经产出的候选
+    rt.execute('''
+        function _fake_input(n)
+            local obj = {}
+            function obj:iter()
+                local i = 0
+                return function()
+                    i = i + 1
+                    if i <= n then
+                        return Candidate("", 0, 1, "原有" .. i, "")
+                    end
+                end
+            end
+            return obj
+        end
+    ''')
+
+    def run_filter(inp, n_orig=2):
+        rt.execute("_reset()")
+        fake = rt.eval(f"_fake_input({n_orig})")
+        env = rt.table()
+        eng = rt.table()
+        ctx = rt.table()
+        ctx.input = inp
+        eng.context = ctx
+        env.engine = eng
+        fl.func(fake, env)
+        return g._ysize()
+
+    n = run_filter("v")
+    check(f"输入 v 时插入 3 条剪切板候选（总共 {n} 个）", n == 3 + 2, f"实际 {n}")
+
+    rt.execute("_reset()")
+    fake = rt.eval("_fake_input(2)")
+    env = rt.table()
+    eng = rt.table()
+    ctx = rt.table()
+    ctx.input = "v"
+    eng.context = ctx
+    env.engine = eng
+    fl.func(fake, env)
+    texts = [s(g._ytext(i)) for i in range(1, g._ysize() + 1)]
+    # 前 3 条应该是剪切板，后面才是原有候选
+    check("剪切板候选排在原有候选前面", "原有1" in texts and texts.index("原有1") >= 3,
+          f"顺序 {texts}")
+    check(f"每条文本互不相同（{len(texts)} 条）", len(texts) == len(set(texts)),
+          "uniquifier 会按 text 去重，重复会导致数字选字错位")
+    check("候选文本带零宽空格补位", any("\u200b" in t for t in texts[:3]))
+
+    check("v 模式下 state.active = True", g.COMMON.state.active is True)
+
+    for other in ("vv", "v1", "nv", "hao", ""):
+        n = run_filter(other, n_orig=2)
+        check(f"输入 {other!r} 时原样透传（{n} 个）", n == 2, f"实际 {n}")
+        check(f"输入 {other!r} 后 state.active = False",
+              g.COMMON.state.active is not True, "模式标记没清，processor 会误抢数字键")
 
     print(f"\n通过 {PASS} / {PASS + FAIL}")
     if FAIL == 0:
