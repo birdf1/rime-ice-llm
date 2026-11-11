@@ -68,19 +68,35 @@ public class Inp {
     }
 
     // 真实敲键：VK + 扫描码
+    [DllImport("user32.dll")] public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+
+    public static void ShiftTap(byte vk) {
+        ushort scan = (ushort)MapVirtualKey(vk, 0);
+        keybd_event(0x10, 0x2A, 0, UIntPtr.Zero);            // Shift down
+        System.Threading.Thread.Sleep(25);
+        keybd_event(vk, (byte)scan, 0, UIntPtr.Zero);        // KEYDOWN
+        System.Threading.Thread.Sleep(25);
+        keybd_event(vk, (byte)scan, 2, UIntPtr.Zero);        // KEYUP
+        System.Threading.Thread.Sleep(25);
+        keybd_event(0x10, 0x2A, 2, UIntPtr.Zero);            // Shift up
+    }
+
     public static uint Tap(byte vk) {
         INPUT[] arr = new INPUT[2];
 
         // 只给 wVk，wScan 留 0：同时给两者时 Windows 会按扫描码解析，
         // 数字键和字母键的扫描码规则不同，会导致数字键失效。
         arr[0].type = 1;
+        // 扫描码必须给：只给 wVk 时 ToUnicode 拿不到物理键位，
+        // 大小写状态（CapsLock / Shift）不会被应用，测出来的永远是原始字符。
+        ushort scan = (ushort)MapVirtualKey(vk, 0);
         arr[0].ki.wVk = vk;
-        arr[0].ki.wScan = 0;
+        arr[0].ki.wScan = scan;
         arr[0].ki.dwFlags = 0;                 // KEYDOWN
 
         arr[1].type = 1;
         arr[1].ki.wVk = vk;
-        arr[1].ki.wScan = 0;
+        arr[1].ki.wScan = scan;
         arr[1].ki.dwFlags = 2;                 // KEYUP
 
         return SendInput(2, arr, Marshal.SizeOf(typeof(INPUT)));
@@ -115,6 +131,10 @@ $form.Add_Shown({
         $t = $tok.Trim()
         if ($t -eq "") { continue }
 
+        # S-a 表示 Shift+a，用来验证大写通道
+        $shift = $false
+        if ($t -match '^S-(.+)$') { $shift = $true; $t = $Matches[1] }
+
         $vk = 0
         if ($t.Length -eq 1 -and $t -match '^[A-Za-z]$') {
             $vk = [byte]([char]([string]$t).ToUpper())
@@ -127,7 +147,8 @@ $form.Add_Shown({
             continue
         }
 
-        $sent = [Inp]::Tap([byte]$vk)
+        if ($shift) { [void][Inp]::ShiftTap([byte]$vk) }
+        else        { [void][Inp]::Tap([byte]$vk) }
         [System.Windows.Forms.Application]::DoEvents()
         Start-Sleep -Milliseconds $GapMs
     }

@@ -10,8 +10,12 @@ patch:
   # 关掉 librime 1.13 的数字分隔符功能，避免干扰数字选字
   punctuator/digit_separators: ""
 
-  # ⚠️ CapsLock 默认会直接切英文模式（good_old_caps_lock: true）。
-  #    按下去以后字母全部原样输入、没有候选栏、数字键也不再选字，
-  #    表现就是「输入法坏了」。这里关掉，CapsLock 只决定大小写，
-  #    不影响中英文状态。
-  ascii_composer/good_old_caps_lock: false
+  # CapsLock 在本机就是「中英文开关」——实测 Weasel 无论这个值真假，
+  # 按下 CapsLock 都会进英文模式，而且模式内字母固定小写（拿不到大写）。
+  # 所以保持 true，把它当纯粹的开关用；要打大写按 Shift。
+  ascii_composer/good_old_caps_lock: true
+
+  # 切换时顺手清空未上屏的编码。默认是 clear，这里写明防止以后被改掉：
+  # 不清空的话会留下「有编码、没候选」的半死状态，
+  # 表现就是候选栏看着在、数字键却选不中。
+  ascii_composer/switch_key/Caps_Lock: clear

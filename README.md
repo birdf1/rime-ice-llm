@@ -528,28 +528,40 @@ rime-ice 默认是 100，**别动它**。真嫌重就砍词库和 translator，�
 空格能上屏、数字不能 → 问题在数字键的处理链；两者都不能 → 问题在测试脚本或焦点。
 这一条能省掉大量瞎猜。
 
-### 16. CapsLock 一按，输入法就「坏」了 ⚠️ 和第 13 条并列最常中招
+### 16. CapsLock 只切模式、不给大写；切换过程还会留下半死状态 ⚠️
 
-`default.yaml` 默认 `good_old_caps_lock: true`，意思是**CapsLock 直接切换中英文模式**。
-按下去以后：
+**实测结论（Weasel 0.17.4 + librime 1.13.1）**：把 `good_old_caps_lock` 设成 `true`
+还是 `false`，按下 CapsLock 都会进英文模式，而且**模式里字母固定小写，拿不到大写**。
 
-- 字母全部原样输入，没有候选栏 —— 看起来像「输入法没启动」
-- 数字键变成数字字符，不再选字 —— 看起来像「数字键选不中候选」
-- 打出来的全是大写，比如 `ya2` → `YA2`
+原因：CapsLock 被输入法当「中英文开关」吃掉了，这个键事件根本没到 Windows，
+系统的 caps 状态不会翻转，所以永远是小写。这是 rime 的设计，不是配置写错。
 
-这个状态不会自己恢复，而且很多人根本不会注意到 CapsLock 灯。排查顺序上应该和
-第 13 条的方案检查放在一起，先排除掉。
+```
+CapsLock 开  -> abc        （小写，没有大写）
+左 Shift     -> 切英文
+Shift + a    -> A          （大写通道正常，实测 ABc = Shift+a, Shift+b, c）
+```
 
-建议直接关掉，让 CapsLock 只决定大小写，不碰中英文状态：
+**要打大写就按 Shift**，别指望 CapsLock。
+
+第二个坑更隐蔽：CapsLock **开→关** 之后会留下「有编码、没候选」的半死状态。
+此时候选栏看着还在，按数字却选不中，字母也上不了屏。要恢复得重启 WeaselServer
+或再切一次模式。这也是「数字键选不中」的成因之一，排查时值得试一次 CapsLock 开关。
+
+所以正确的做法是把它当纯开关用，并明确要求切换时清空未上屏的编码：
 
 ```yaml
 # default.custom.yaml
 patch:
-  ascii_composer/good_old_caps_lock: false
+  ascii_composer/good_old_caps_lock: true
+  ascii_composer/switch_key/Caps_Lock: clear
 ```
 
-顺带一提，`default.yaml` 里还有 `ascii_composer/Caps_Lock: clear`，那是「按 CapsLock
-清空当前输入」，属于另一回事。
+**别去改 `good_old_caps_lock: false`** —— 改了也拦不住 CapsLock 进英文模式，
+只会多一层困惑。
+
+> 另外：rime 会按你选过的候选调整词频，测试时反复提交同一个输入，
+> 候选顺序会变。看到「ya+2 上次出亚、这次出压」不是 bug，是词频学习。
 
 ---
 
